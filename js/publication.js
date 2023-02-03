@@ -1,6 +1,82 @@
 //Needs Python web server to run
 //python -m simpleHTTPServer 8000
 
+//_________________________________________//
+var numHeroPics = 15; // 2 images are part of other convos
+
+var pics = document.getElementsByClassName("heropic");
+var picGrid = document.getElementById("interactive");
+console.log(picGrid);
+window.onload = function() {positionCards()};
+//picGrid.onload = function() {positionCards()};
+//window.onload = function() {positionCards()};
+
+function setupGrid() {
+    picGrid.onload = function() {positionCards()};
+}
+
+function mapRange(value,a,b,c,d) { //maps value from range a > b to c > d
+	value = (value - a) / (b - a);
+  return c + value * (d - c);
+}
+
+function positionCards() {
+  addCards();
+  for(var i = 0; i < pics.length; i++) {
+    console.log(i);
+    var randAngle = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 15;
+    var randLinear = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 10;
+    
+    
+  	var proportion = (i) / pics.length;
+  	var startangle = ((i+1) / pics.length) * (-Math.PI);
+    var degrees = (startangle * (180 / Math.PI));
+    var mappedDegrees = mapRange(degrees, 0, -180, -12, 12);
+    var mappedLinear = mapRange(proportion, 0, 1, -40, 40);
+    var mappedHeight = 30 * (0.5 + Math.sin(startangle));
+    
+	pics[i].style.transform += "translateY(" + (mappedHeight + randLinear) + "%)";
+    pics[i].style.transform += "translateX(" + (mappedLinear + randLinear) + "%)";
+    pics[i].style.transform += "rotateZ(" + (mappedDegrees + randAngle) + "deg)";
+    pics[i].innerHTML = mappedDegrees + " , " + i;
+    //console.log(70 * (0.5 - Math.cos(startangle)));
+    console.log(randAngle);
+    console.log(randLinear);
+
+  }
+}
+
+function addCards() {
+    // if(parsedCSV[position]["Username"] == user1)
+    //     newBlock.className = "user1";
+    // else
+    //     newBlock.className = "user2";
+    // newBlock.id = "Current";
+    // newBlock.style = "white-space: pre-wrap;";
+    // document.body.appendChild(newBlock);
+    for (var i = 0; i < numHeroPics; i++) {
+        console.log(i+1);
+        if (i == 10 || i == 12) {
+            continue;
+        } else {
+            var image = document.createElement("img");
+            image.id = i+1;
+            image.src = "./cropped-mainart/" + (i+1) + ".jpg";
+            image.className = "heropic";
+            console.log("added attributes");
+            document.getElementById("interactive").appendChild(image);
+        }
+    }
+}
+
+positionCards();
+
+//addCards();
+
+
+
+//_________________________________________//
+
 var toBeParsed = "Discord_Convo_Merged.csv";
 
 const user1 = "Fluffel"
@@ -197,27 +273,3 @@ function sortConvo(parsedCSV) {
     return [userCount1, userCount2]
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-//var activities = [
-//    { activity: 'Work', amount: 9 },
-//    { activity: 'Eat', amount: 1 },
-//    { activity: 'Commute', amount: 2 },
-//    { activity: 'Play Game', amount: 1 },
-//    { activity: 'Sleep', amount: 7 }
-//];
-
-//returnData(discordData, name);
-
-//console.log(discordData);
