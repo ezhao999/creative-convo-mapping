@@ -129,7 +129,7 @@ myPromise.then(
     function (value) {
         //returnData(value, "Username");
         //console.log(sortConvo(value));
-        document.getElementById("first").onclick = function() {onClickConvo(this.id, value, currLine)};
+        //document.getElementById("first").onclick = function() {onClickConvo(this.id, value, currLine)};
     },
     function (error) {
         console.log(error);
