@@ -128,16 +128,9 @@ let myPromise = new Promise(function (myResolve, myReject) {
 
 myPromise.then(
     function (value) {
-<<<<<<< Updated upstream
-        //returnData(value, "Username");
-        //console.log(sortConvo(value));
-        //document.getElementById("first").onclick = function() {onClickConvo(this.id, value, currLine)};
-=======
         csvToConvos(value, sortedConvos);
         console.log(sortedConvos);
         console.log(displayHomeTexts(sortedConvos, numRandomBlocks))
-
->>>>>>> Stashed changes
     },
     function (error) {
         console.log(error);
