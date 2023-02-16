@@ -1,97 +1,181 @@
-body{
-    background-color: black;
+@font-face {
+  font-family: "Inter";
+  src: local("Inter"), url("../Inter/Inter-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: local("Inter"), url("../Inter/Inter-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+}
+
+
+body {
+    background-color: #0f0f0f;
 }
 
 p {
-    color: white;
+  margin-block-start: 0px;
+  margin-block-end: 0px;
 }
 
-.user1 {
-    color: rgb(161, 203, 255) !important;
+/* Read up on CSS classes to figure out the most efficient way of organizing*/
 
+
+.convo-block {
+  position: relative;
+  display: block;
+  width: 60ch;
+  font-family: "Inter";
+  font-size: 0.75vw;
+  color: white;
+  line-height: 1.25vw;
+  margin: 0px;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  border-color:rgba(255, 255, 255, 0.2);
+  transition: all 500ms ease;
+  cursor:pointer;
+}
+
+.convo-block.home{
+  width: 40ch !important;
+}
+
+.convo-block.right{
+  align-self: flex-end;
+  text-align: right;
+}
+
+
+.convo-block:hover {
+  border-color: white;
+}
+
+.inner-text {
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  bottom: auto;
+  display: block;
+  padding: 0.5vw 0.75vw;
+  border-width: 1px;
+  border-color: transparent;
+}
+
+.inner-text.height-set {
+  position: relative;
+  align-self: auto;
+  color: transparent;
 }
 
 .user2 {
-    color: rgb(180, 180, 31) !important;
+  font-style: italic;
+}
+
+
+/*_____________________________________________________*/
+.convo-text {
+  width: 60ch; /* Make sure this value matches maxLineLength in js file */
+  align-self: flex-start;
+  font-size: 0.75vw;
+  line-height: 1.25vw;
+}
+
+.convo-text.user1 {
+  font-family: "Inter";
+  font-style: normal;
+}
+.user2 {
+  font-family: "Inter";
+  font-style: italic;
+}
+
+.convo-text.hero {
+  width: 40ch;
+  align-self: flex-start
 }
 
 .clicked {
     color: green !important;
 }
 
-/*_______________________________________________*/
-
-body {
-    background-color: black;
-  }
+/*_______________________________________________*/  
   
-  /*.content-test {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 90vw;
-    padding-bottom: calc(9/16*100%);
-    aspect-ratio: 16/9;
-    transform: translate(-50%, -50%);
-    background-color: gray;
-    }*/
-    
-    .container {
-      position: absolute;
-      width: 100vw;
-      height: calc((9/16)*100vw);
-      max-height: 100vh;
-      max-width: calc((16/9)*100vh);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #0f0f0f;
-    }
-    
-    .pic-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 90%;
-      height: 90%;
-      transform: translate(-50%, -50%);
-      border-style: dashed;
-      border-color: rgba(255, 255, 255, 0.2);
-      border-width: 2px;
-      /*background: white;*/
-    }
-    
-    .pic-grid {
-      display: grid;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 25%;
-      height: 60%;
-      transform: translate(-50%, -50%);
-      
-      justify-items: center;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(0px, 1fr);
-      grid-auto-rows: minmax(auto, 100%);
-    }
-    
-    /* .pic {
-      background: #f58700;
-      position: absolute;
-      height: 65%;
-      aspect-ratio: 3/4;
-      border: 2px solid black;
-    } */
+.container {
+  position: absolute;
+  /* width: 100vw; */
+  width: 85vw;
+  /* height: calc((9/16)*100vw); */
+  height: calc((9/16)*85vw);
+  max-height: 85vh;
+  max-width: calc((16/9)*85vh);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 
-    .heropic{
-        height: 65%;
-        aspect-ratio: 3/4;
-        position: absolute;
-        max-width: none;
-        object-fit: fill;
+.frame {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: start;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  padding: 50px;
+  transform: translate(-50%, -50%);
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border-width: 0px;
+  /*background: white;*/
+}
+.frame.home-text{
+  justify-content: space-between;
+}
+.frame.pics{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    }
+.heropic {
+  opacity: 0.8;
+  height: 65%;
+  aspect-ratio: 3/4;
+  position: absolute;
+  max-width: none;
+  object-fit: fill;
+  transition: opacity 500ms ease;
+}
+
+.inactive {
+  opacity: 0.2;
+  border-color: transparent;
+}
+
+.active {
+  opacity: 0.8;
+  border-color: white;
+}
+
+.heropic.inactive{
+  opacity: 0.15;
+}
+
+.heropic.unfocused{
+  opacity: 0.075;
+}
+
+.heropic.disabled{
+  opacity: 0;
+}
+
+

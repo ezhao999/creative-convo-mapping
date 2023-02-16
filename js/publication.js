@@ -1,19 +1,31 @@
 //Needs Python web server to run
 //python -m simpleHTTPServer 8000
 
-//_________________________________________//
+// Global Variables ------------------------------------------------------------
+
 var numHeroPics = 15; // 2 images are part of other convos
+var maxConvoLength = 40; // Max lines of the CSV that a convo can be
+var maxLineLength = 65; // From CSS, used to calculate ConvoLength - slightly more than x CH width
+var sortedConvos = [];
+var activeStages = [];
+//var homeConvos = [];
+
+var numRandomBlocks = 5;
+
+var toBeParsed = "Discord_Convo_Merged.csv";
+const user1 = "Fluffel"
+const user2 = "FryingHamster"
+
+//parsed CSV data to below
+var discordData;
+
+var currUser = user1;
 
 var pics = document.getElementsByClassName("heropic");
-var picGrid = document.getElementById("interactive");
-console.log(picGrid);
+var picGrid = document.getElementById("picFrame");
 window.onload = function() {positionCards()};
-//picGrid.onload = function() {positionCards()};
-//window.onload = function() {positionCards()};
 
-function setupGrid() {
-    picGrid.onload = function() {positionCards()};
-}
+// Home Page: Rearranging Cards ------------------------------------------------
 
 function mapRange(value,a,b,c,d) { //maps value from range a > b to c > d
 	value = (value - a) / (b - a);
@@ -26,7 +38,6 @@ function positionCards() {
     console.log(i);
     var randAngle = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 15;
     var randLinear = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 10;
-    
     
   	var proportion = (i) / pics.length;
   	var startangle = ((i+1) / pics.length) * (-Math.PI);
@@ -47,71 +58,61 @@ function positionCards() {
 }
 
 function addCards() {
-    // if(parsedCSV[position]["Username"] == user1)
-    //     newBlock.className = "user1";
-    // else
-    //     newBlock.className = "user2";
-    // newBlock.id = "Current";
-    // newBlock.style = "white-space: pre-wrap;";
-    // document.body.appendChild(newBlock);
+    //debugger;
+    var index = 0;
     for (var i = 0; i < numHeroPics; i++) {
         console.log(i+1);
         if (i == 10 || i == 12) {
             continue;
         } else {
+            index++;
             var image = document.createElement("img");
-            image.id = i+1;
+            image.id = (index) + "-img";
             image.src = "./cropped-mainart/" + (i+1) + ".jpg";
             image.className = "heropic";
-            console.log("added attributes");
-            document.getElementById("interactive").appendChild(image);
+            image.classList.add("inactive");
+            document.getElementById("picFrame").appendChild(image);
+            if(activeStages.indexOf(index-1) != -1){
+                image.classList.remove("inactive");
+                image.classList.add("active");
+            }
+            //console.log(i+1);
+            //console.log("added attributes");
+
         }
     }
 }
 
-positionCards();
-
-//addCards();
-
-
-
-//_________________________________________//
-
-var toBeParsed = "Discord_Convo_Merged.csv";
-
-const user1 = "Fluffel"
-const user2 = "FryingHamster"
-
-//parsed CSV data to below
-var discordData;
-
-
-//fields to sort convo  by
-var currLine = 0;
-var currStage = 0;
-var currUser = user1;
-
-//Papa.parse(toBeParsed, {
-//    download: true,
-//    delimiter: ',',
-//    header: true,
-//    complete: function (results) {
-//        discordData = results.data;
-//        console.log("Parsing complete:", results);
-//    }
-//});
+// function styleCards(){
+//     var images = document.getElementsByClassName("hero-pic");
+//     console.log(images);
+//     var mutatedStages = [];
+//     activeStages.forEach(element => {
+//         var newVal = element + "-img";
+//         mutatedStages.push(newVal);
+//     });
+//     console.log(mutatedStages);
+//     Array.from(images).forEach(element => {
+//         if (activeStages.indexOf(images.id) != -1){
+//             element.classList.remove("inactive");
+//             element.classList.add("active");
+//         }
+//     });
+// }
 
 function returnData(data, field) {
     for (let i = 1; i < data.length; i++) {
         console.log(data[i][field]);
     }
-}
 
+}
+// Promise: Runs entire page after CSV load ------------------------------------
 
 //Finish parsing CSV, then if successful, perform returnData().
 //Else, show a timeout message in the console. 
 let myPromise = new Promise(function (myResolve, myReject) {
     Papa.parse(toBeParsed, {
+        dynamicTyping: true,
         download: true,
         delimiter: ',',
         header: true,
@@ -127,24 +128,25 @@ let myPromise = new Promise(function (myResolve, myReject) {
 
 myPromise.then(
     function (value) {
+<<<<<<< Updated upstream
         //returnData(value, "Username");
         //console.log(sortConvo(value));
         //document.getElementById("first").onclick = function() {onClickConvo(this.id, value, currLine)};
+=======
+        csvToConvos(value, sortedConvos);
+        console.log(sortedConvos);
+        console.log(displayHomeTexts(sortedConvos, numRandomBlocks))
+
+>>>>>>> Stashed changes
     },
     function (error) {
         console.log(error);
     },
 );
 
-
-function heroTexts(parsedCSV) { //Creates blocks for each stage to show
-
-    //Should take input of createBlock(parsedCSV)
-
-}
-
 /*
-High-level code:
+
+HIGH LEVEL CODE:
 
 In conversation mode, when user clicks once, generate one text block based on the 
 last starting position.
@@ -155,43 +157,296 @@ repeat
 
 Click behavior - starting from clicking on a "home" text block: 
 
-1)
+Prompt user to click on the div after convo is complete, and if there is more convo:
+Add a new div and shrink the opacity of the last
+
+States: 
+
+    1) Home - contains all 13 images and 5 randomly picked conversations
+    2) Conversation - interactive click to turn conversation with stage-relevant hero images
+    3) Title - Animation that follows the frame sequence in Figma
 
 
+    - Home Page should have Button / Method to Access Title
+        -Home page loads 5 random convo snippets with slight transitions
+        -Load in a help button
+        -When hovering over a convo snippet OR related image - dim opacity of everything except the snippet and image
+    - Conversation may also display previous 2 conversations (for a background)
+        - Follow webflow for example of how it should be laid out
+
+    - Conversation should be click by click until done, multiple transitions:
+        1) If at the end of a conversation array, add in a new div to continue, 
+                And keep the convo going
+        2) If at the end of a stage, outline the image or div as a nudge to click,
+                Then take the user back to home page
 */
 
+// Home Page Text Functions ----------------------------------------------------
 
-function createBlock(parsedCSV, position) {
-    //generates single text block
-    let content = "";
-    let user = parsedCSV[position]["Username"];
-    console.log("starting line " + position);
-        while(parsedCSV[position]["Username"] == user){
-            console.log("executing " + position);
-            //add a new line only when not the first instance
-            if (content != ""){
-                content += "\n";
-            }
-
-            content += parsedCSV[position]["Content"];
-            if (position == parsedCSV.length - 1)
-                break;
-            position++;
-        }
-    
-    currLine = position;
-    currUser = parsedCSV[position]["Username"];
-    return content;
+function randomInt(min, max) {
+    return Math.round(Math.random() * (max-min) + min);
 }
 
-// function blockToDiv(text) {
-//     //function to create a new text block
-//     const newBlock = document.createElement("p");
-//     newBlock.innerHTML = text;
-//     return newBlock;
-// }
+function randomIntArray(formattedCSV, num) { //num is numRandomBlocks
+    const upper = formattedCSV.length - 1;
+    const lower = 0;
+    const pickedStages = [];
+    while (pickedStages.length < num){
+        let testNum = randomInt(lower, upper);
+        if (pickedStages.indexOf(testNum) == -1)
+            pickedStages.push(testNum);
+    }
+    console.log(pickedStages);
+    return pickedStages;
+}
 
-function typeText(div, text, pos) {
+function pickRandomBlocks(formattedCSV, /*chosen,*/ num){
+    var chosen = [];
+    var stages = randomIntArray(formattedCSV, num); //number indices
+    activeStages = stages;
+    for (let i = 0; i < num; i++){
+        //push first line of chosen convos into home convo array
+        chosen.push(formattedCSV[stages[i]][0][1]);
+    }
+    return [chosen, stages];
+}
+
+function displayHomeTexts(formattedCSV, num){ // also contains image dimming
+    var images = document.body.getElementsByClassName("heropic");
+    var source = pickRandomBlocks(formattedCSV, num);
+    var stages = source[1];
+    var homeTexts = [];
+    for (const obj of source[0]){
+        console.log(obj["content"]);
+        homeTexts.push(obj["content"]);
+    }
+    /*
+        For each text in hometexts:
+        Create new element:
+        - Structure (see webflow):
+            -Outer Div
+                -Inner text (height set)
+                -Inner text
+        Inner text (height set) - content = text
+        Inner text = text OR start typing out
+        Id = stage at index of for loop
+        Class = Evens are left, Odds are right
+
+    */
+    for (let i = 0; i < homeTexts.length; i++){ 
+        var block = createHTMLBlock(homeTexts[i], stages[i], false, i);
+        block.onmouseenter = function() {focus(this)};
+        block.onmouseleave = function() {unFocus(this)};
+        block.onclick = function() {onClickConvo({obj:this, isStart:true})};
+        document.getElementById("main-textFrame").appendChild(block);
+        //append said HTML block to the website
+    }
+
+    console.log(images.length);
+    console.log(`homeTexts: ${homeTexts}`);
+    console.log(`stages: ${stages}`);
+}
+
+function createHTMLBlock (text, index, isConvo, isOdd, user) {
+    // text: mandatory (content)
+    // index: mandatory (will populate into id)
+    // isConvo: mandatory (determines class behaviors)
+    // isOdd: optional (only for home screen purposes)
+    // user: optional (only for user usage)
+    var container = document.createElement("div");
+    var innerText = document.createElement("p");
+    var innerTextHeight = document.createElement("p");
+
+    container.appendChild(innerText);
+    container.appendChild(innerTextHeight);
+    
+    container.id = (index + 1)/* + "-text"*/;
+
+    innerText.classList.add("inner-text");
+    innerTextHeight.classList.add("inner-text", "height-set");
+
+    container.classList.add("convo-block")
+    if (isConvo){
+        if (user == user2){
+            container.classList.add("right", "user2");
+        }
+    } else {
+        container.classList.add("home");
+        if(isOdd % 2 == 1){
+            container.classList.add("right");
+        }
+    }
+    innerTextHeight.innerHTML = text;
+    //add an if statement that includes typing for convos
+    innerText.innerHTML = text;
+
+    return container;
+}
+
+// On hover functions ----------------------------------------------------------
+
+function focus(obj) {
+    const allInactive = document.body.getElementsByClassName("convo-block");
+    const allPics = document.body.getElementsByClassName("heropic");
+    // For each home text, set to inactive unless it is the hovered object, in which case set to active
+    Array.from(allInactive).forEach(element => {
+        if(element != obj){
+            element.classList.add("unfocused");
+        } else {
+            element.classList.add("active");
+        }
+    });
+
+    Array.from(allPics).forEach(element => {
+        if(element.id != obj.id + "-img"){
+            element.classList.add("unfocused");
+        } else {
+            element.classList.add("active");
+        }
+    });
+
+}
+
+function unFocus(obj) {
+    const allInactive = document.body.getElementsByClassName("convo-block");
+    const allPics = document.body.getElementsByClassName("heropic");
+    Array.from(allInactive).forEach(element => {
+        if(element != obj){
+            element.classList.remove("unfocused");
+        } else {
+            element.classList.remove("active");
+        }
+    });
+
+    Array.from(allPics).forEach(element => {
+        if(element.id != obj.id + "-img"){
+            element.classList.remove("unfocused");
+        } else {
+            element.classList.remove("active");
+        }
+    });
+}
+
+// Turning CSV into formatted conversations ------------------------------------
+
+function csvToConvos(parsedCSV, result) { 
+    /*
+        Function: Separates parsed CSV into more organized "chunks"
+        1: Chunks cannot exceed 40 lines, calculated by createBlock
+        2: Chunks end as soon as the next stage is hit (even if not at line limit)
+        3: Data structure: One array of length [number of stages in CSV] >>
+                           Multiple arrays of text blocks that each equal <40 lines >>
+                           Blocks that contain user-by-user text and some metadata
+
+    */
+    let currLine = 0;
+    let currStage = 1;
+    let lineCount = 0;
+    let imgCount = 0; // pass into createBlock to give a number 
+    let multiConvo = []; //contains all singleConvos needed to make up one stage
+    let singleConvo = []; //single array of <40 line convo
+    let convoEnd = false;
+
+    while (currLine < parsedCSV.length) {
+
+        while (lineCount < maxConvoLength){
+        //keep filling array until 40 lines are met
+            if(parsedCSV[currLine]["Stage"] != currStage){ //stop adding lines if next stage
+                currStage++;
+                convoEnd = true;
+                break;
+            }
+            let block = createBlock(parsedCSV, currLine);
+            if(lineCount + block.height > maxConvoLength){ //don't add block if it will exceed limit
+                break;
+            }
+            else {
+                singleConvo.push(block);
+                lineCount += block["height"];
+                currLine = (block["lastLine"]); //How to keep track of which line in CSV?
+                if(currLine > parsedCSV.length-1){ //Index out of bounds guard
+                    convoEnd = true;
+                    break;
+                }
+            }
+        }
+
+        lineCount = 0;
+        if(singleConvo.length){
+            multiConvo.push(singleConvo);
+            singleConvo = [];
+        }
+
+        if (convoEnd){
+            result.push(multiConvo);
+            multiConvo = [];
+            convoEnd = false;
+        }
+
+    }
+}
+
+function createBlock(parsedCSV, position) { //ONLY USED AS HELPER FOR csvToConvos
+    // length logic:
+    // 1) newlines count as extra line
+    // 2) if current CSV line exceeds 40 chars, add Math.ceil(length/maxLineLength)
+    //debugger;
+
+    var str = "";
+    var lineCt = 0;
+    var isImage = false;
+    let isHero = false;
+
+    var user = parsedCSV[position]["Username"];
+    //console.log("starting line " + position);
+        const startPos = position;
+
+        while(parsedCSV[position]["Username"] == user){
+
+            if (parsedCSV[position]["Link"]){
+                if(str)
+                    break;
+                else 
+                isImage = true;
+                isHero = parsedCSV[position]["isHero"];
+                position++;
+                break;
+            }
+
+            // If text is not empty, concatenate w existing str
+            if (str != ""){
+                //str += "\n\n"; //add one empty line, then continue adding
+                str += "</br></br>"; //add one empty line, then continue adding
+
+            }
+
+            // For each CSV content, figure out additional line height
+            let currStr = parsedCSV[position]["Content"];
+            str += currStr;
+            lineCt += Math.ceil(currStr.length / maxLineLength) + 1;
+            
+
+            //Iterate to next CSV line. If index is out of bounds, break the loop
+            position++;
+            if (position > parsedCSV.length - 1)
+                break;
+
+        }
+
+    const newBlock = {
+        user: user,
+        content: str,
+        height: lineCt,
+        isImage: isImage,
+        isHero: isHero,
+        lastLine: position
+    }
+    return newBlock;
+}
+
+// Animation / Interaction Code ------------------------------------------------
+
+function typeText(div, text, pos) { //types out convo block
     console.log(div);
     const speed = 25;
 
@@ -206,70 +461,47 @@ function typeText(div, text, pos) {
     }
 }
 
-function onClickConvo(clickID, parsedCSV, position){
-    document.getElementById(clickID).onclick = null;
-    document.getElementById(clickID).removeAttribute("id");
+// function onClickConvo(clickID, parsedCSV, position){ //sets onlick attribute for target clickID
+//     document.getElementById(clickID).onclick = null;
+//     document.getElementById(clickID).removeAttribute("id");
 
-    content = createBlock(parsedCSV, position);
-    // newBlock = blockToDiv(content);
-    newBlock = document.createElement("p");
-    if(parsedCSV[position]["Username"] == user1)
-        newBlock.className = "user1";
-    else
-        newBlock.className = "user2";
-    newBlock.id = "Current";
-    newBlock.style = "white-space: pre-wrap;";
-    document.body.appendChild(newBlock);
+//     content = createBlock(parsedCSV, position).content; //CHANGE THIS LINE IF CREATEBLOCK IS CHANGED TOO
+//     // newBlock = blockToDiv(content);
+//     newBlock = document.createElement("p");
+//     if(parsedCSV[position]["Username"] == user1)
+//         newBlock.className = "user1";
+//     else
+//         newBlock.className = "user2";
+//     newBlock.id = "Current";
+//     newBlock.style = "white-space: pre-wrap;";
+//     document.body.appendChild(newBlock);
 
-    typeText(newBlock.id, content, 0);
-
-    //newBlock.onclick = function() {onClickConvo(this.id, discordData, currLine)};
-    // PROBLEMS FOR TUESDAY:
-    // 1)   Typing is offset: Currently, you have to click the current typing animation
-    //      in order to advance to the next one.
-    //
-    //      Current Order: Click current --> new div created and starts typing
-    //      New Order: Click current --> type current --> create new div when done typing current
-    //      
-
-    // PROBLEMS FOR WEDNESDAY:
-    // 1)   How to create a div and set height
-
-
-}
-
-
-
-// function convoLoop(parsedCSV) {
-//     //runs through a single stage of the CSV, deletes 
-//     currUser = "";
-//     currStage = 0;
-//     currLine = 1;
+//     typeText(newBlock.id, content, 0);
 // }
+/* Click function:
 
-/*_________________________________________________*/
- 
+1) Each home div needs an onclick to start their respective conversations
 
-function sortConvo(parsedCSV) {
-
-    //divide lines into text blocks based on user
-    //
-    //images (hero or not) count as a separate conversation block
-
-    const stageCount = parsedCSV[parsedCSV.length - 1]["Stage"];
-    currStage = 0;
-    let userCount1 = 0;
-    let userCount2 = 0;
-    for (var i = 0; i < parsedCSV.length; i++) {
-        //check if index is above current
-        if (parsedCSV[i]["Stage"] != currStage){
-            if (parsedCSV[i]["Username"] == user1)
-                userCount1++;
-            if (parsedCSV[i]["Username"] == user2)
-                userCount2++;
+2) Start convo:
+    - Delete current div
+    - Delete all images
+    - 
+*/
+function onClickConvo({obj, formattedCSV, stage, substage, isStart}){
+    var images = document.getElementsByClassName("heropic");
+    Array.from(images).forEach(element => {
+        if(element.id != obj.id + "-img"){
+            element.classList.remove("inactive");
+            element.classList.remove("unfocused");
+            element.classList.add("disabled");
+        } else {
+            element.style.transform = "";
         }
+    })
+    if (isStart) {
+        var heroTexts = document.getElementsByClassName("convo-block");
+        Array.from(heroTexts).forEach(element => {
+            element.remove();
+        });
     }
-    currStage = 0;
-    return [userCount1, userCount2]
-
 }
