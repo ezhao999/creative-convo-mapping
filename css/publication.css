@@ -15,6 +15,7 @@
 
 body {
     background-color: #0f0f0f;
+    overflow: hidden;
 }
 
 p {
@@ -32,18 +33,20 @@ p {
   font-family: "Inter";
   font-size: 0.75vw;
   color: white;
-  line-height: 1.25vw;
+  line-height: 1vw;
   margin: 0px;
   border-style: solid;
   border-width: 1px;
   border-radius: 5px;
-  border-color:rgba(255, 255, 255, 0.2);
+  border-color:rgba(255, 255, 255, 1);
+  background-color: rgba(0, 0, 0, 0.1);
   transition: all 500ms ease;
-  cursor:pointer;
+  cursor: pointer;
 }
 
 .convo-block.home{
-  width: 40ch !important;
+  width: 40ch;
+  border-color:rgba(255, 255, 255, 0.4);
 }
 
 .convo-block.right{
@@ -137,33 +140,73 @@ p {
   border-width: 0px;
   /*background: white;*/
 }
+
+.frame.current{
+  border-width: 1px !important;
+}
+
 .frame.home-text{
   justify-content: space-between;
+  z-index: 1;
 }
+
 .frame.pics{
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 0;
 }
 
 .heropic {
   opacity: 0.8;
-  height: 65%;
-  aspect-ratio: 3/4;
+  height: 67.5%;
   position: absolute;
-  max-width: none;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  border-color: transparent;
+  padding: 1.25%;
+  transition: opacity 400ms ease,
+              transform 300ms ease;
+}
+
+.convopic {
+  height: 40%;
+  position: absolute;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  border-color:rgba(255, 255, 255, 1);
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 1.25%;
+  cursor: pointer;
+  transition: opacity 400ms ease,
+              transform 300ms ease;
+}
+
+.convopic.large {
+  height: 75%;
+}
+
+.content {
+  /* Add in 100% height
+     Move object fit here */
+  height: 100%;
   object-fit: fill;
-  transition: opacity 500ms ease;
+}
+
+.convopic > .content {
+  opacity: 0;
+  transition: opacity 400ms ease;
 }
 
 .inactive {
   opacity: 0.2;
-  border-color: transparent;
+  border-color: transparent !important;
 }
 
 .active {
   opacity: 0.8;
-  border-color: white;
 }
 
 .heropic.inactive{
@@ -175,7 +218,7 @@ p {
 }
 
 .heropic.disabled{
-  opacity: 0;
+  opacity: 0.025;
 }
 
 

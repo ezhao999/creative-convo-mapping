@@ -1,58 +1,72 @@
-//Needs Python web server to run
-//python -m simpleHTTPServer 8000
+// A Piece about Creative Anxiety about a Piece about Social Anxiety
+// Last updated: 3-4-2023
+// Current progress: Working copy of the turn-by-turn convo visualization,
+//                   including showing images and longer conversations
+//                   Stylistically finished
+// Future goals: Add in sound interaction? Custom sounds for each convo
 
 // Global Variables ------------------------------------------------------------
 
-var numHeroPics = 15; // 2 images are part of other convos
-var maxConvoLength = 40; // Max lines of the CSV that a convo can be
-var maxLineLength = 65; // From CSS, used to calculate ConvoLength - slightly more than x CH width
+const numHeroPics = 15; // 2 images are part of other convos
+const maxConvoLength = 40; // Max lines of the CSV that a convo can be
+const maxLineLength = 65; // From CSS, used to calculate ConvoLength - slightly more than x CH width
+
+// more CSS variables:
+const blockFont = 0.75; // in vw
+const blockHeight = 1; // in vw
+const blockWidth = 60; // in ch, convo block width
+const blockPad = 50; // in px
+const frameSize = 100; //in percent
+
+const opacity = 0.4; //in units, for conversations with multiple pages
+const margin = 0.15; //in vw, for conversations with multiple pages
+
+
 var sortedConvos = [];
 var activeStages = [];
-//var homeConvos = [];
+var activeImages = [];
+var turnsSinceImages = [];
 
 var numRandomBlocks = 5;
 
 var toBeParsed = "Discord_Convo_Merged.csv";
-const user1 = "Fluffel"
-const user2 = "FryingHamster"
+const user1 = "Fluffel";
+const user2 = "FryingHamster";
 
 //parsed CSV data to below
 var discordData;
 
-var currUser = user1;
-
 var pics = document.getElementsByClassName("heropic");
-var picGrid = document.getElementById("picFrame");
-window.onload = function() {positionCards()};
 
 // Home Page: Rearranging Cards ------------------------------------------------
 
+window.onload = function() {addCards(); positionCards();};
+
 function mapRange(value,a,b,c,d) { //maps value from range a > b to c > d
 	value = (value - a) / (b - a);
-  return c + value * (d - c);
+    return c + value * (d - c);
 }
 
 function positionCards() {
-  addCards();
-  for(var i = 0; i < pics.length; i++) {
-    console.log(i);
-    var randAngle = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 15;
-    var randLinear = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 10;
-    
-  	var proportion = (i) / pics.length;
-  	var startangle = ((i+1) / pics.length) * (-Math.PI);
-    var degrees = (startangle * (180 / Math.PI));
-    var mappedDegrees = mapRange(degrees, 0, -180, -12, 12);
-    var mappedLinear = mapRange(proportion, 0, 1, -40, 40);
-    var mappedHeight = 30 * (0.5 + Math.sin(startangle));
-    
-	pics[i].style.transform += "translateY(" + (mappedHeight + randLinear) + "%)";
-    pics[i].style.transform += "translateX(" + (mappedLinear + randLinear) + "%)";
-    pics[i].style.transform += "rotateZ(" + (mappedDegrees + randAngle) + "deg)";
-    pics[i].innerHTML = mappedDegrees + " , " + i;
-    //console.log(70 * (0.5 - Math.cos(startangle)));
-    console.log(randAngle);
-    console.log(randLinear);
+    for(var i = 0; i < pics.length; i++) {
+        console.log(i);
+        var randAngle = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 15;
+        var randLinear = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 10;
+        
+        var proportion = (i) / pics.length;
+        var startangle = ((i+1) / pics.length) * (-Math.PI);
+        var degrees = (startangle * (180 / Math.PI));
+        var mappedDegrees = mapRange(degrees, 0, -180, -12, 12);
+        var mappedLinear = mapRange(proportion, 0, 1, -40, 40);
+        var mappedHeight = (30 * (0.5 + Math.sin(startangle))) + 5;
+        
+        pics[i].style.transform += "translateY(" + (1.25*(mappedHeight + randLinear)) + "%)";
+        pics[i].style.transform += "translateX(" + (1.25*(mappedLinear + randLinear)) + "%)";
+        pics[i].style.transform += "rotateZ(" + (mappedDegrees + randAngle) + "deg)";
+        //pics[i].innerHTML = i + 1;
+        //console.log(70 * (0.5 - Math.cos(startangle)));
+        console.log(randAngle);
+        console.log(randLinear);
 
   }
 }
@@ -66,15 +80,22 @@ function addCards() {
             continue;
         } else {
             index++;
+            var wrapper = document.createElement("div");
             var image = document.createElement("img");
-            image.id = (index) + "-img";
+
             image.src = "./cropped-mainart/" + (i+1) + ".jpg";
-            image.className = "heropic";
-            image.classList.add("inactive");
-            document.getElementById("picFrame").appendChild(image);
+            image.className = "content";
+
+            wrapper.id = (index) + "-img";
+            wrapper.className = "heropic";
+            wrapper.classList.add("inactive");
+
+            wrapper.appendChild(image);
+            document.getElementById("picFrame").appendChild(wrapper);
+
             if(activeStages.indexOf(index-1) != -1){
-                image.classList.remove("inactive");
-                image.classList.add("active");
+                wrapper.classList.remove("inactive");
+                wrapper.classList.add("active");
             }
             //console.log(i+1);
             //console.log("added attributes");
@@ -82,23 +103,6 @@ function addCards() {
         }
     }
 }
-
-// function styleCards(){
-//     var images = document.getElementsByClassName("hero-pic");
-//     console.log(images);
-//     var mutatedStages = [];
-//     activeStages.forEach(element => {
-//         var newVal = element + "-img";
-//         mutatedStages.push(newVal);
-//     });
-//     console.log(mutatedStages);
-//     Array.from(images).forEach(element => {
-//         if (activeStages.indexOf(images.id) != -1){
-//             element.classList.remove("inactive");
-//             element.classList.add("active");
-//         }
-//     });
-// }
 
 function returnData(data, field) {
     for (let i = 1; i < data.length; i++) {
@@ -108,8 +112,8 @@ function returnData(data, field) {
 }
 // Promise: Runs entire page after CSV load ------------------------------------
 
-//Finish parsing CSV, then if successful, perform returnData().
-//Else, show a timeout message in the console. 
+// Finish parsing CSV, then if successful, perform returnData().
+// Else, show a timeout message in the console. 
 let myPromise = new Promise(function (myResolve, myReject) {
     Papa.parse(toBeParsed, {
         dynamicTyping: true,
@@ -136,43 +140,6 @@ myPromise.then(
         console.log(error);
     },
 );
-
-/*
-
-HIGH LEVEL CODE:
-
-In conversation mode, when user clicks once, generate one text block based on the 
-last starting position.
-
-Type out the text letter by letter, save the last CSV position
-
-repeat
-
-Click behavior - starting from clicking on a "home" text block: 
-
-Prompt user to click on the div after convo is complete, and if there is more convo:
-Add a new div and shrink the opacity of the last
-
-States: 
-
-    1) Home - contains all 13 images and 5 randomly picked conversations
-    2) Conversation - interactive click to turn conversation with stage-relevant hero images
-    3) Title - Animation that follows the frame sequence in Figma
-
-
-    - Home Page should have Button / Method to Access Title
-        -Home page loads 5 random convo snippets with slight transitions
-        -Load in a help button
-        -When hovering over a convo snippet OR related image - dim opacity of everything except the snippet and image
-    - Conversation may also display previous 2 conversations (for a background)
-        - Follow webflow for example of how it should be laid out
-
-    - Conversation should be click by click until done, multiple transitions:
-        1) If at the end of a conversation array, add in a new div to continue, 
-                And keep the convo going
-        2) If at the end of a stage, outline the image or div as a nudge to click,
-                Then take the user back to home page
-*/
 
 // Home Page Text Functions ----------------------------------------------------
 
@@ -213,24 +180,12 @@ function displayHomeTexts(formattedCSV, num){ // also contains image dimming
         console.log(obj["content"]);
         homeTexts.push(obj["content"]);
     }
-    /*
-        For each text in hometexts:
-        Create new element:
-        - Structure (see webflow):
-            -Outer Div
-                -Inner text (height set)
-                -Inner text
-        Inner text (height set) - content = text
-        Inner text = text OR start typing out
-        Id = stage at index of for loop
-        Class = Evens are left, Odds are right
 
-    */
     for (let i = 0; i < homeTexts.length; i++){ 
         var block = createHTMLBlock(homeTexts[i], stages[i], false, i);
         block.onmouseenter = function() {focus(this)};
         block.onmouseleave = function() {unFocus(this)};
-        block.onclick = function() {onClickConvo({obj:this, isStart:true})};
+        block.onclick = function() {startConvo(this, sortedConvos)};
         document.getElementById("main-textFrame").appendChild(block);
         //append said HTML block to the website
     }
@@ -243,9 +198,11 @@ function displayHomeTexts(formattedCSV, num){ // also contains image dimming
 function createHTMLBlock (text, index, isConvo, isOdd, user) {
     // text: mandatory (content)
     // index: mandatory (will populate into id)
-    // isConvo: mandatory (determines class behaviors)
+    // isConvo: mandatory - (determines class behaviors)
     // isOdd: optional (only for home screen purposes)
     // user: optional (only for user usage)
+
+    // For convos: index refers to the nth turn in a convo, not the stage
     var container = document.createElement("div");
     var innerText = document.createElement("p");
     var innerTextHeight = document.createElement("p");
@@ -258,22 +215,77 @@ function createHTMLBlock (text, index, isConvo, isOdd, user) {
     innerText.classList.add("inner-text");
     innerTextHeight.classList.add("inner-text", "height-set");
 
-    container.classList.add("convo-block")
+    container.classList.add("convo-block");
+
+    //styles and populates blocks based on home text or within a clicked convo
     if (isConvo){
         if (user == user2){
             container.classList.add("right", "user2");
         }
+        //container.onclick = typeText(/*parameters*/);
     } else {
         container.classList.add("home");
         if(isOdd % 2 == 1){
             container.classList.add("right");
         }
+        innerText.innerHTML = text;
     }
     innerTextHeight.innerHTML = text;
-    //add an if statement that includes typing for convos
-    innerText.innerHTML = text;
 
     return container;
+}
+
+function createImage(isHero, id) {
+    // used for convo images only
+    // identical to the addCards() code, but 
+    var wrapper = document.createElement("div");
+    var image = document.createElement('img');
+
+    image.src = "./cropped_doodles/" + id + ".jpg";
+    image.className = "content";
+
+    wrapper.id = id;
+    wrapper.className = "convopic";
+    if (isHero) wrapper.classList.add("large");
+
+    wrapper.appendChild(image);
+    return wrapper;
+}
+
+function positionImage(obj) {
+    console.log(obj.classList);
+    if (obj.classList.contains("heropic") == false){
+        console.log("not a heropic");
+        if (obj.classList.contains("large") == false){
+            console.log("small image " + obj.id);
+            var mapX = mapRange(Math.random(), 0, 1, 17.5, 41.5);
+            var mapY = mapRange(Math.random(), 0, 1, -5.0, 25.0);
+        } else {
+            console.log("large image " + obj.id);
+            var mapX = mapRange(Math.random(), 0, 1, 17.5, 22.5);
+            var mapY = mapRange(Math.random(), 0, 1, 0, 5.0);
+        }
+        obj.style.transform += "translateX(" + mapX + "vw)";
+        obj.style.transform += "translateY(" + mapY + "vw)";
+    }
+
+    var mapAngle = mapRange(Math.random(), 0, 1, -0.5, 0.5) * 15;
+    obj.style.transform += "rotateZ(" + mapAngle + "deg)";
+
+}
+
+function onclickImage(obj) {
+    image = obj.firstChild;
+    image.style.opacity = 1;
+    obj.style.border = "transparent";
+    obj.style.backgroundColor = "transparent";
+    obj.style.cursor = "default";
+
+
+    activeImages.push(obj);
+    turnsSinceImages.push(0);
+    console.log(activeImages);
+    console.log(turnsSinceImages);
 }
 
 // On hover functions ----------------------------------------------------------
@@ -284,7 +296,7 @@ function focus(obj) {
     // For each home text, set to inactive unless it is the hovered object, in which case set to active
     Array.from(allInactive).forEach(element => {
         if(element != obj){
-            element.classList.add("unfocused");
+            element.classList.add("inactive");
         } else {
             element.classList.add("active");
         }
@@ -305,7 +317,7 @@ function unFocus(obj) {
     const allPics = document.body.getElementsByClassName("heropic");
     Array.from(allInactive).forEach(element => {
         if(element != obj){
-            element.classList.remove("unfocused");
+            element.classList.remove("inactive");
         } else {
             element.classList.remove("active");
         }
@@ -383,7 +395,6 @@ function createBlock(parsedCSV, position) { //ONLY USED AS HELPER FOR csvToConvo
     // length logic:
     // 1) newlines count as extra line
     // 2) if current CSV line exceeds 40 chars, add Math.ceil(length/maxLineLength)
-    //debugger;
 
     var str = "";
     var lineCt = 0;
@@ -391,7 +402,6 @@ function createBlock(parsedCSV, position) { //ONLY USED AS HELPER FOR csvToConvo
     let isHero = false;
 
     var user = parsedCSV[position]["Username"];
-    //console.log("starting line " + position);
         const startPos = position;
 
         while(parsedCSV[position]["Username"] == user){
@@ -408,7 +418,6 @@ function createBlock(parsedCSV, position) { //ONLY USED AS HELPER FOR csvToConvo
 
             // If text is not empty, concatenate w existing str
             if (str != ""){
-                //str += "\n\n"; //add one empty line, then continue adding
                 str += "</br></br>"; //add one empty line, then continue adding
 
             }
@@ -439,48 +448,21 @@ function createBlock(parsedCSV, position) { //ONLY USED AS HELPER FOR csvToConvo
 
 // Animation / Interaction Code ------------------------------------------------
 
-function typeText(div, text, pos) { //types out convo block
-    console.log(div);
-    const speed = 25;
-
-    if (pos < text.length) {
-        document.getElementById(div).innerHTML += text.charAt(pos);
-        console.log(text.charAt(pos));
-        pos++;
-        setTimeout(function() {typeText(div, text, pos)}, speed);
-    } else {
-        console.log(`Setting onclick for ${div}`);
-        document.getElementById(div).onclick = function() {onClickConvo(div, discordData, currLine)};
-    }
+function newFrame(){
+    var frame = document.createElement("div");
+    frame.classList.add("frame", "current");
+    frame.id = "currentConvo";
+    frame.style.zIndex = 2;
+    return frame
 }
 
-// function onClickConvo(clickID, parsedCSV, position){ //sets onlick attribute for target clickID
-//     document.getElementById(clickID).onclick = null;
-//     document.getElementById(clickID).removeAttribute("id");
+function startConvo(obj, formattedCSV){
+    // Add a new div, render it on top of all existing content
+    var container = document.getElementsByClassName("container");
+    var convoDiv = document.createElement("div");
+    var convoDiv = newFrame();
 
-//     content = createBlock(parsedCSV, position).content; //CHANGE THIS LINE IF CREATEBLOCK IS CHANGED TOO
-//     // newBlock = blockToDiv(content);
-//     newBlock = document.createElement("p");
-//     if(parsedCSV[position]["Username"] == user1)
-//         newBlock.className = "user1";
-//     else
-//         newBlock.className = "user2";
-//     newBlock.id = "Current";
-//     newBlock.style = "white-space: pre-wrap;";
-//     document.body.appendChild(newBlock);
-
-//     typeText(newBlock.id, content, 0);
-// }
-/* Click function:
-
-1) Each home div needs an onclick to start their respective conversations
-
-2) Start convo:
-    - Delete current div
-    - Delete all images
-    - 
-*/
-function onClickConvo({obj, formattedCSV, stage, substage, isStart}){
+    // gets all pics on home screen, then deletes all that aren't relevant
     var images = document.getElementsByClassName("heropic");
     Array.from(images).forEach(element => {
         if(element.id != obj.id + "-img"){
@@ -489,12 +471,237 @@ function onClickConvo({obj, formattedCSV, stage, substage, isStart}){
             element.classList.add("disabled");
         } else {
             element.style.transform = "";
+            positionImage(element);
+            element.style.transform += "scale(1.2)";
+
         }
     })
-    if (isStart) {
-        var heroTexts = document.getElementsByClassName("convo-block");
-        Array.from(heroTexts).forEach(element => {
+
+    // Call createHTMLBlock() for the second element of the conversation
+    var index = parseInt(obj.id) - 1; //off by one correction
+    var nextText = 2;
+    var turn = formattedCSV[index][0][nextText];
+    var isImage = turn["isImage"];
+
+    // block is the conversation turn that comes right after
+    if (isImage) {
+        let imgPos = 1;
+        let id = (index+1) + "-" + imgPos;
+        var block = createImage(turn["isHero"], id);
+        positionImage(block);
+        //document.getElementById("picFrame").appendChild(block);
+        block.onclick = function() {
+            onclickImage(this);
+            onClickConvo(this, formattedCSV, index, 0, nextText, 0, imgPos);
+        };
+    } else {
+        var block = createHTMLBlock(turn["content"], nextText, true, undefined,
+                                    turn["user"]); 
+        block.onclick = function() {onClickConvo(this, formattedCSV, index, 0, nextText, 0, 0)};
+    }
+    // home texts generated without user, so we need to find the user again
+    var startUser = formattedCSV[index][0][1]["user"];
+
+    var heroTexts = document.getElementsByClassName("convo-block");
+    Array.from(heroTexts).forEach(element => {
+        if(element.id == obj.id){
+            element.style.opacity = 1
+            element.style.borderColor = "transparent";
+            element.style.cursor = "default";
+            element.classList.remove("right");
+            element.onclick = null;
+
+            element.id = "";
+
+            if (startUser == user2){
+                console.log(startUser);
+                element.classList.add("right");
+                element.classList.add("user2");
+            }
+            convoDiv.appendChild(element); 
+            // set onClickConvo
+            setTimeout(function(){element.classList.remove("home");}, 50);
+        }
+        else 
             element.remove();
-        });
+    });
+
+    convoDiv.appendChild(block);
+    container[0].appendChild(convoDiv);
+}
+
+
+function onClickConvo(obj, formattedCSV, stage, subStage, turnNum, pos, imgPos){ //Applied to every convo block, with changing parameters
+
+    // obj > target element to add text to
+    // stage > current convo stage
+    // subStage > which sub-array of the stage are we at so far?
+    // turnNum > which turn of the convo are we at?
+    // pos > counter for which character to type out next
+    // imgPos > for supplemental images
+    const speed = 20;
+    let text = formattedCSV[stage][subStage][turnNum]["content"];
+    obj.style.opacity = 1;
+    obj.style.borderColor = "transparent";
+    obj.style.backgroundColor = "transparent";
+    obj.style.cursor = "default";
+    obj.onclick = "";
+
+    // Typing function
+    if (pos < text.length) {
+        char = text.charAt(pos);
+        if(char == "<"){
+            pos += 4;
+            char = "<br/>";
+        }
+        obj.firstChild.innerHTML += char;
+        pos++;
+        setTimeout(function() {onClickConvo(obj, formattedCSV, stage, subStage, turnNum, pos, imgPos)}, speed);
+    } else {
+        // Nutshell: Manage the creation of a new block
+
+        // Figure out next block of text
+        setTimeout(function(){
+
+            // update turns since each image was displayed
+            if(turnsSinceImages.length > 0){
+                for (let i = 0; i < turnsSinceImages.length; i++){
+                    turnsSinceImages[i]++;
+                }
+
+                for (let i = 0; i < activeImages.length; i++){
+                    element = activeImages[i];
+                    turns = turnsSinceImages[i];
+                    element.style.opacity = Math.max(styleCurve(1, turns, 1), 0.6);
+                    console.log("opacity set to " + styleCurve(1, turns, 1));
+                }
+            }
+
+            if (turnNum >= formattedCSV[stage][subStage].length - 1){
+                turnNum = 0;
+    
+                if (subStage >= formattedCSV[stage].length - 1){
+                    subStage = 0;
+                    // NOTE: stop adding blocks, and populate home screen again
+                    setTimeout(function() {resetHome(formattedCSV, numRandomBlocks)}, 1250);
+                    return;
+                    // Set the current image onclick to be resetHome
+                } else {
+                    subStage++;
+    
+                    // shrink all previous arrays accordingly
+                    // NOTE: may need to reverse array
+                    let frames = Array.from(document.getElementsByClassName("frame")).reverse();
+                    let convoPics = Array.from(document.getElementsByClassName("convopic"));
+
+
+                    convoPics.forEach(pic => {
+                        pic.style.opacity = 1;
+                    })
+                    frames = frames.filter(frame => frame.className == "frame" || frame.className == "frame current");
+                    console.log(frames.length);
+                    adjustFrames(frames);
+    
+                    let container = document.getElementsByClassName("container");
+                    container[0].appendChild(newFrame());
+                    // Create a new div when advancing subStage
+                }
+            } else {
+                turnNum++;
+                pos = 0;
+            }
+
+            let nextIndex = formattedCSV[stage][subStage][turnNum];
+            if (nextIndex["isImage"]){
+                imgPos++;
+                let id = (stage+1) + "-" + imgPos;
+                // Write new function createImageBlock()
+                var newBlock = createImage(nextIndex["isHero"], id);
+                positionImage(newBlock);
+                // add code to image opacity to onClickConvo
+                newBlock.onclick = function() {
+                    onclickImage(this);
+                    onClickConvo(this, formattedCSV, stage, subStage, turnNum, pos, imgPos);
+                };
+
+            } else { 
+                var newBlock = createHTMLBlock(nextIndex["content"], turnNum, true,
+                                            undefined, nextIndex["user"]);
+                newBlock.onclick = function() {onClickConvo(this, formattedCSV, stage, subStage, turnNum, pos, imgPos)};
+            }
+            let targetDiv = document.getElementById("currentConvo");
+            targetDiv.appendChild(newBlock);
+
+        }, 250);
     }
 }
+
+function resetHome(formattedCSV, num){
+    // delete all frame elements that are not home or images
+    var frames = Array.from(document.getElementsByClassName("frame"));
+    frames = frames.filter(frame => frame.className == "frame" || frame.className == "frame current");
+    frames.forEach(frame => {
+        frame.remove();
+    })
+
+    // reset any convo images and counters
+    activeImages = [];
+    turnsSinceImages = [];
+
+    // create and display new home texts and stages
+    activeStages = [];
+    displayHomeTexts(formattedCSV, num);
+    
+    // restyle cards for active / inactive based on stages
+    pics = Array.from(pics);
+    pics.forEach(pic => {
+        pic.style.transform = "";
+        pic.classList.remove("active", "disabled");
+        imageNum = String(pic.id).replace("-img", "");
+        imageNum = parseInt(imageNum);
+        if(activeStages.indexOf(imageNum-1) != -1){
+            pic.classList.add("active");
+        } else {
+            pic.classList.add("inactive");
+        }
+    })
+    // reposition all cards
+    positionCards();
+
+}
+
+function styleCurve(input, index, mult){
+    return (1 - (0.02*mult) * ((index+1)**2)) * input;
+}
+
+function adjustFrames(frames) {
+    // const textSize = 0.75 // in vw
+    // const lineHeight = 1.25 // in vw
+    // const width = 60 // in ch, convo block width
+    // const frameSize = 100 //in percent
+    let index = 0;
+    frames.forEach(frame => {
+        let blocks = Array.from(frame.getElementsByClassName("convo-block"));
+        index++;
+        //resize each convo block
+        blocks.forEach(block => {
+            block.style.fontSize = styleCurve(blockFont, index, 1) + "vw";
+            block.style.lineHeight = styleCurve(blockHeight, index, 1) + "vw";
+            block.style.width = styleCurve(blockWidth, index, 1) + "ch";
+            block.style.margin = -styleCurve(margin, index, 1) + "vw";
+        });
+
+        //resize each frame
+        frame.classList.remove("current");
+        frame.style.width = styleCurve(frameSize, index, 1) + "%";
+        frame.style.height = styleCurve(frameSize, index, 1) + "%";
+        frame.style.opacity = styleCurve(opacity, index, 2);
+        frame.style.justifyContent = "center";
+        frame.style.zIndex = -(index);
+        frame.id = "convo-" + index;
+        console.log(frame.id);
+       
+    });
+    
+}
+
